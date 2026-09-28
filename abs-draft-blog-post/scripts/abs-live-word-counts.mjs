@@ -1,7 +1,13 @@
 // Live /blog/ body word counts, read straight from the repo data file.
+//
+// Usage:  node abs-live-word-counts.mjs [repo_root]
+// Default repo_root: $ABS_REPO, else ~/repos/abs-website. Works from any cwd.
 import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
-const lines = readFileSync("src/data/blogPosts.ts", "utf8").split("\n");
+const root = process.argv[2] || process.env.ABS_REPO || join(homedir(), "repos", "abs-website");
+const lines = readFileSync(join(root, "src", "data", "blogPosts.ts"), "utf8").split(/\r?\n/);
 const rows = [];
 let slug = null;
 

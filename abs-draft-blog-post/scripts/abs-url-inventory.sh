@@ -28,6 +28,7 @@ slugs() { grep -hoE '"?slug"?:[[:space:]]*"[a-z0-9-]+"' "$@" | grep -oE '"[a-z0-
     /facilities \
     /blog \
     /careers \
+    /privacy-policy \
     /industries-we-serve \
     /get-a-quote-commercial-cleaning-free-quote-texas \
     /contact-commercial-cleaning-texas
@@ -45,6 +46,15 @@ slugs() { grep -hoE '"?slug"?:[[:space:]]*"[a-z0-9-]+"' "$@" | grep -oE '"[a-z0-
     done
   done
   slugs src/data/facilities.ts                          | sed 's|^|/facilities/|'
+  # allFacilities in facilities.ts spreads the city and near-me variants from
+  # src/data/*Cities.ts (churchCities.ts, medicalCities.ts, ...). They route
+  # under /facilities/ too, and outnumber the nine hubs six to one.
+  shopt -s nullglob
+  city_files=(src/data/*Cities.ts)
+  shopt -u nullglob
+  if [ ${#city_files[@]} -gt 0 ]; then
+    slugs "${city_files[@]}"                            | sed 's|^|/facilities/|'
+  fi
   slugs src/data/locations.ts                           | sed 's|^|/commercial-cleaning-|'
   slugs src/data/posts.ts                               | sed 's|^|/|'
   slugs src/data/blogPosts.ts                           | sed 's|^|/blog/|'

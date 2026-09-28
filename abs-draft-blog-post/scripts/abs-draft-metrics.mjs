@@ -14,7 +14,9 @@ if (!file) {
 }
 const target = Number(process.argv[3]) || null;
 
-const raw = readFileSync(file, "utf8");
+// Normalize CRLF first: every split below assumes \n, and "\r\n\r\n" never
+// matches /\n\n+/, so a Windows-saved draft collapses into one paragraph.
+const raw = readFileSync(file, "utf8").replace(/\r\n/g, "\n");
 const h1 = raw.indexOf("\n# ");
 let body = h1 === -1 ? raw : raw.slice(h1);
 const qa = body.indexOf("\n## QA Summary");

@@ -66,7 +66,7 @@ git branch --show-current
 git status --short
 ```
 
-Record the branch in the QA summary. **The URL inventory reflects the checked-out branch only.** Pages built on a preview branch are absent from other branches. As of the last check, the near-me hubs (`/services/commercial-cleaning-near-me` and six siblings) live on `preview/abs-34-near-me-hubs`, not on `main`. If the topic wants a page that is not in the inventory, say so rather than inventing the URL.
+Record the branch and `git rev-parse --short HEAD` in the QA summary as the **base branch**: the checkout the URL inventory, claims gate, and word counts were measured against. It is not necessarily the branch the draft will be committed to. Drafts are often committed to a new cluster branch cut after drafting (ABS-52 drafts were written on `content/abs-51-commercial-cleaning`, then committed to `content/abs-52-post-construction-drafts`), so never label the base as "the branch this draft lives on". If the user later commits the drafts to a different branch, name that branch separately in the handoff README. **The URL inventory reflects the checked-out branch only.** Pages built on a preview branch are absent from other branches. As of the last check, the near-me hubs (`/services/commercial-cleaning-near-me` and six siblings) live on `preview/abs-34-near-me-hubs`, not on `main`. If the topic wants a page that is not in the inventory, say so rather than inventing the URL.
 
 Then read, in this order:
 
@@ -109,7 +109,7 @@ bash "$HOME/.claude/skills/abs-draft-blog-post/scripts/abs-url-inventory.sh" "$A
 wc -l /tmp/abs-urls.txt
 ```
 
-The script reads the same data files `src/app/sitemap.ts` spreads, so the result matches what the site actually routes. Roughly 105 URLs on a typical content branch: about 50 `/services/` (30 with literal slugs plus 20 built as base by city), 10 `/facilities/`, 5 city pages, 22 root-level posts, 10 `/blog/` posts, plus static routes.
+The script reads the same data files `src/app/sitemap.ts` spreads, so the result matches what the site actually routes. Roughly 160 URLs on a current branch: about 50 `/services/` (30 with literal slugs plus 20 built as base by city), 63 `/facilities/` (9 hubs from `facilities.ts` plus 54 city and near-me variants from `src/data/*Cities.ts`), 5 city pages, 22 root-level posts, 10 `/blog/` posts, plus 10 static routes. Last verified against the live `abscleaning.com/sitemap.xml`: 160 URLs, 63 facility pages, exact match. A branch cut before the facility city pages landed shows about 106 URLs with only 9 facility pages; that means the branch is stale, not that the script is broken.
 
 **Every internal link in the draft must appear in this file.** No exceptions, no placeholders, no guessed URLs.
 
@@ -125,8 +125,7 @@ If the slug is taken, **stop and ask the user**. This is a live risk: `/blog/com
 ### 1.3 Word-count target
 
 ```bash
-cd "$ABS"
-node "$HOME/.claude/skills/abs-draft-blog-post/scripts/abs-live-word-counts.mjs"
+node "$HOME/.claude/skills/abs-draft-blog-post/scripts/abs-live-word-counts.mjs" "$ABS"
 ```
 
 Prints the body word count of every live `/blog/` post, plus min, max, average, and a suggested target. At last run: n=10, min 1,122, max 1,952, avg 1,656, suggested **1,650 words**.
@@ -416,7 +415,7 @@ Append a `## QA Summary` section to the end of the draft file and repeat it in t
 
 | Check | Result |
 |---|---|
-| Branch drafted against | `content/abs-51-commercial-cleaning` |
+| Base branch (inventory measured on) | `<git branch --show-current>` @ `<short SHA>` |
 | Body word count / target | 1,688 / 1,650 |
 | Opening answer word count (40-60) | 52 |
 | Internal links / broken | 14 / 0 |
@@ -485,6 +484,6 @@ In `scripts/` beside this file:
 | Script | Purpose |
 |---|---|
 | `abs-url-inventory.sh` | Builds the internal link inventory from the repo data files. Replaces `internal_urls.csv`. |
-| `abs-live-word-counts.mjs` | Prints live `/blog/` body word counts and a suggested target. Run from the repo root. |
+| `abs-live-word-counts.mjs` | Prints live `/blog/` body word counts and a suggested target. Takes the repo root as an argument (default `$ABS_REPO`, else `~/repos/abs-website`); works from any directory. |
 | `abs-claims-check.sh` | Runs the repo's own claims gate against a draft in `content-drafts/`, then cleans up. |
 | `abs-draft-metrics.mjs` | Gate 5 structural metrics: body word count, opening answer, Key Takeaways, FAQ pairs, paragraph-length distribution. |
